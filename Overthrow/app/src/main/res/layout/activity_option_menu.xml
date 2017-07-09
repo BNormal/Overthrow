@@ -69,12 +69,11 @@
         android:id="@+id/button"
         android:layout_width="230dp"
         android:layout_height="108dp"
-        android:layout_marginBottom="126dp"
+        android:layout_marginBottom="40dp"
         android:text="Start"
         android:textSize="30sp"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintLeft_toLeftOf="parent"
-        app:layout_constraintRight_toRightOf="parent"
-        tools:layout_editor_absoluteY="333dp" />
+        app:layout_constraintRight_toRightOf="parent" />
 
 </android.support.constraint.ConstraintLayout>
