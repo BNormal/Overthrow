@@ -12,5 +12,13 @@ public class OptionMenu extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_option_menu);
+        Button btn = (Button)findViewById(R.id.btnStart);
+
+        btn.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                startActivity(new Intent(OptionMenu.this, GameBoard.class));
+            }
+        });
     }
 }
