@@ -12,15 +12,17 @@ public class GameBoard extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_game_board);
         LinearLayout layout = (LinearLayout) findViewById(R.id.layoutBoard);
-        //layout.setOrientation(LinearLayout.VERTICAL);
-        for (int i = 0; i < 3; i++) {
+        layout.setOrientation(LinearLayout.VERTICAL);
+        int size = 7;
+        for (int i = 0; i < size; i++) {
             LinearLayout row = new LinearLayout(this);
             row.setLayoutParams(new LinearLayout.LayoutParams(LinearLayout.LayoutParams.FILL_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT));
 
-            for (int j = 0; j < 4; j++) {
+            for (int j = 0; j < size; j++) {
                 Button btnTag = new Button(this);
                 btnTag.setLayoutParams(new LinearLayout.LayoutParams(LinearLayout.LayoutParams.WRAP_CONTENT, LinearLayout.LayoutParams.WRAP_CONTENT));
-                btnTag.setText("Button " + (j + 1 + (i * 4)));
+                btnTag.setText("");
+                btnTag.setLayoutParams(new LinearLayout.LayoutParams(170, 170));
                 btnTag.setId(j + 1 + (i * 4));
                 row.addView(btnTag);
             }
