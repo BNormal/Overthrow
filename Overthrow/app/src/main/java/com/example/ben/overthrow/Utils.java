@@ -11,6 +11,7 @@ public class Utils {
     private static Random random;
 
     public static final int random(int min, int max) {
+        max = max + 1;
         final int n = Math.abs(max - min);
         return Math.min(min, max) + (n == 0 ? 0 : random(n));
     }

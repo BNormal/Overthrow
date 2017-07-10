@@ -1,3 +1,11 @@
 <resources>
     <string name="app_name">Overthrow</string>
+    <string-array name="board_sizes">
+        <item>7x7</item>
+        <item>5x5</item>
+    </string-array>
+    <string-array name="players">
+        <item>2</item>
+        <item>4</item>
+    </string-array>
 </resources>
