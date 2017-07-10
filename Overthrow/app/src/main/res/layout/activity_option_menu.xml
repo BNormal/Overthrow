@@ -8,14 +8,28 @@
     tools:context="com.example.ben.overthrow.OptionMenu">
 
     <Button
+        android:id="@+id/btnOptionBack"
+        android:layout_width="150dp"
+        android:layout_height="60dp"
+        android:layout_marginBottom="50dp"
+        android:layout_marginLeft="16dp"
+        android:layout_marginRight="8dp"
+        android:text="Back"
+        android:textSize="30sp"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintHorizontal_bias="0.413"
+        app:layout_constraintLeft_toLeftOf="parent"
+        app:layout_constraintRight_toLeftOf="@+id/btnStart" />
+
+    <Button
         android:id="@+id/btnStart"
-        android:layout_width="230dp"
-        android:layout_height="108dp"
-        android:layout_marginBottom="40dp"
+        android:layout_width="150dp"
+        android:layout_height="60dp"
+        android:layout_marginBottom="50dp"
+        android:layout_marginRight="31dp"
         android:text="Start"
         android:textSize="30sp"
         app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintLeft_toLeftOf="parent"
         app:layout_constraintRight_toRightOf="parent" />
 
     <TextView
