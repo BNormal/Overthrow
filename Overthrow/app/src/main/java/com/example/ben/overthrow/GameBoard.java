@@ -1,15 +1,21 @@
 package com.example.ben.overthrow;
 
+import android.content.Intent;
+import android.content.res.ColorStateList;
 import android.graphics.Bitmap;
 import android.graphics.Color;
+import android.graphics.drawable.BitmapDrawable;
+import android.graphics.drawable.Drawable;
 import android.os.AsyncTask;
+import android.os.Handler;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
+import android.view.Gravity;
 import android.view.View;
-import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.ImageButton;
+import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.ProgressBar;
 import android.widget.TextView;
@@ -31,13 +37,26 @@ public class GameBoard extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         timeStamp = System.currentTimeMillis();
         stopTimer = false;
-        game = new Game(7, 2);
+        Intent intent = getIntent();
+        int data[] = intent.getIntArrayExtra("data");
+        // 0 = size, 1 = players, 2 = timer
+        game = new Game(data[0], data[1], data[2]);
+        Log.w("Board", data[0] + ", " + data[1] + ", " + data[2]);
         setContentView(R.layout.activity_game_board);
         LinearLayout layout = (LinearLayout) findViewById(R.id.layoutBoard);
-        layout.setOrientation(LinearLayout.VERTICAL);
-        int size = 7;
+        Button btnMenu = (Button) findViewById(R.id.btnMenu);
+        btnMenu.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                startActivity(new Intent(GameBoard.this, MainMenu.class));
+            }
+        });
+        ProgressBar timer = (ProgressBar) findViewById(R.id.timer);
+        timer.setProgressBackgroundTintList(ColorStateList.valueOf(Color.parseColor("#FFFFFF")));
+        int size = game.getSize();
         for (int i = 0; i < size; i++) {
             LinearLayout row = new LinearLayout(this);
+            row.setHorizontalGravity(Gravity.CENTER);
             row.setLayoutParams(new LinearLayout.LayoutParams(LinearLayout.LayoutParams.FILL_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT));
 
             for (int j = 0; j < size; j++) {
@@ -50,39 +69,56 @@ public class GameBoard extends AppCompatActivity {
                     }
                 });
                 btnTag.setLayoutParams(new LinearLayout.LayoutParams(LinearLayout.LayoutParams.WRAP_CONTENT, LinearLayout.LayoutParams.WRAP_CONTENT));
-                btnTag.setLayoutParams(new LinearLayout.LayoutParams(170, 170));
+                btnTag.setLayoutParams(new LinearLayout.LayoutParams(170 + 5 * size * (7 - size), 170 + 5 * size * (7 - size)));
                 btnTag.setId(j + (i * size));
                 row.addView(btnTag);
             }
             layout.addView(row);
         }
         refresh();
-        final GameBoard g = this;
-        /*Thread thread = new Thread(new Runnable() {
-            @Override
+        startTimerThread();
+    }
+
+    private void startTimerThread() {
+        final Handler handler = new Handler();
+        Runnable runnable = new Runnable() {
+            long time;
+            private long startTime = System.currentTimeMillis();
             public void run() {
                 while (!stopTimer) {
                     try {
-                        new AsyncCaller(g).execute();
+                        Thread.sleep(10);
                     } catch (Exception e) {
-                        e.printStackTrace();
                     }
+                    handler.post(new Runnable(){
+                        public void run() {
+                            time = (System.currentTimeMillis() - timeStamp) / 1000;
+                            if (time >= 1)
+                                updateTimer((int) time);
+                        }
+                    });
                 }
             }
-        }, "Thread 1");
-        thread.start();*/
+        };
+        new Thread(runnable).start();
     }
 
-    public void updateTimer() {
-        long time = (System.currentTimeMillis() - timeStamp) / 1000;
+    public void updateTimer(int time) {
         ProgressBar timer = (ProgressBar) findViewById(R.id.timer);
-        if (time <= 60) {
-            timer.setProgress((int) (60 - time));
-        } else if (time > 60){
+        if (time <= game.getTimer()) {
+            timer.setProgress((60 / game.getTimer() * (game.getTimer() - time)));
+        } else if (time > game.getTimer()){
             timeStamp = System.currentTimeMillis();
+            timer.setProgress(60);
+            timer.setProgressTintList(ColorStateList.valueOf(Color.parseColor("#FFFFFF")));
             game.nextPlayer();
+            refresh();
         }
-        //timer.getIndeterminateDrawable().setColorFilter(getResources().getColor(Color.GREEN), android.graphics.PorterDuff.Mode.SRC_IN);
+        double timeRemainingPercentage = 100.0 / 60.0 * timer.getProgress();
+        if (timeRemainingPercentage <= 50 && timeRemainingPercentage >= 15) {
+            int fade = (int) (255.0 / 35.0 * (timeRemainingPercentage - 15));
+            timer.setProgressTintList(ColorStateList.valueOf(Color.argb(255, 255, fade, fade)));
+        }
     }
 
     public void handleButtonClick(View view) {
@@ -106,46 +142,28 @@ public class GameBoard extends AppCompatActivity {
                 }
             }
         }
-        setTurnText("Player " + game.getPlayerTurn() + "\nYour Turn!");
+        updateTurnText();
     }
 
     public void changeButton(ImageButton button, int player) {
         if (player == 1)
-            button.setImageResource(R.drawable.redblock);
+            button.setBackgroundResource(R.drawable.redblock);
         else if (player == 2)
-            button.setImageResource(R.drawable.blueblock);
+            button.setBackgroundResource(R.drawable.blueblock);
     }
 
-    public void setTurnText(String text) {
+    private Drawable resize(Drawable image, int width, int height) {
+        Bitmap b = ((BitmapDrawable)image).getBitmap();
+        Bitmap bitmapResized = Bitmap.createScaledBitmap(b, width, height, false);
+        return new BitmapDrawable(getResources(), bitmapResized);
+    }
+
+    public void updateTurnText() {
         TextView txtTurn = (TextView) findViewById(R.id.txtTurn);
-        txtTurn.setText(text);
+        txtTurn.setText("Player " + game.getPlayerTurn() + "\nYour Turn!");
+        String color = game.getCurrentPlayerColor();
+        txtTurn.setTextColor(Color.parseColor(color));
     }
 
 }
 
-class AsyncCaller extends AsyncTask<Void, Void, Void> {
-
-    private GameBoard gb;
-
-    protected AsyncCaller(GameBoard gb) {
-        this.gb = gb;
-    }
-
-    @Override
-    protected void onPreExecute() {
-        super.onPreExecute();
-        //gb.updateTimer();
-        //gb.refresh();
-    }
-
-    @Override
-    protected Void doInBackground(Void... params) {
-        return null;
-    }
-
-    @Override
-    protected void onPostExecute(Void result) {
-        super.onPostExecute(result);
-    }
-
-}

@@ -5,6 +5,7 @@ package com.example.ben.overthrow;
  * Created by Ben on 7/9/2017.
  */
 
+
 import java.util.Random;
 
 public class Utils {
@@ -19,4 +20,5 @@ public class Utils {
     public static final int random(int maxValue) {
         return (int) new Random().nextInt(maxValue);
     }
+
 }

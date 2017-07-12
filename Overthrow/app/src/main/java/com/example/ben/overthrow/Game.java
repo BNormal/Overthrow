@@ -10,17 +10,21 @@ public class Game {
     private int size;
     private int playerTurn;
     private int players;
+    private int timer;
 
-    public Game(int size, int players) {
+    public Game(int size, int players, int timer) {
         this.size = size;
         this.players = players;
+        this.timer = timer;
         board = new int[size][size];
         playerTurn = Utils.random(1, players);
         board[0][0] = nextPlayer();
         board[0][size - 1] = nextPlayer();
-        board[size -1][size - 1] = nextPlayer();
+        board[size - 1][size - 1] = nextPlayer();
         board[size - 1][0] = nextPlayer();
     }
+
+    public int getTimer() { return timer; }
 
     public int getSize() {
         return size;
@@ -51,5 +55,13 @@ public class Game {
         if (playerTurn > players)
             playerTurn = 1;
         return playerTurn;
+    }
+
+    public String getCurrentPlayerColor() {
+        switch (playerTurn) {
+            case 1: return "#0099cc";
+            case 2: return "#cc0000";
+        }
+        return "#ffffff";
     }
 }
