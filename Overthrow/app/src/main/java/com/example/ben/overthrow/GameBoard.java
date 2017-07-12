@@ -4,6 +4,7 @@ import android.content.Intent;
 import android.content.res.ColorStateList;
 import android.graphics.Bitmap;
 import android.graphics.Color;
+import android.graphics.Point;
 import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
 import android.os.AsyncTask;
@@ -66,7 +67,8 @@ public class GameBoard extends AppCompatActivity {
         for (int i = 0; i < size; i++) {
             LinearLayout row = new LinearLayout(this);
             row.setHorizontalGravity(Gravity.CENTER);
-            row.setLayoutParams(new LinearLayout.LayoutParams(LinearLayout.LayoutParams.FILL_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT));
+            row.setVerticalGravity(Gravity.CENTER);
+            row.setLayoutParams(new LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT));
 
             for (int j = 0; j < size; j++) {
                 ImageButton btnTag = new ImageButton(this);
@@ -77,8 +79,8 @@ public class GameBoard extends AppCompatActivity {
                         handleButtonClick(view);
                     }
                 });
-                btnTag.setLayoutParams(new LinearLayout.LayoutParams(LinearLayout.LayoutParams.WRAP_CONTENT, LinearLayout.LayoutParams.WRAP_CONTENT));
-                btnTag.setLayoutParams(new LinearLayout.LayoutParams(170 + 5 * size * (7 - size), 170 + 5 * size * (7 - size)));
+                btnTag.setLayoutParams(new LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.MATCH_PARENT));
+                btnTag.setLayoutParams(new LinearLayout.LayoutParams(165 + 5 * size * (7 - size), 165 + 5 * size * (7 - size)));
                 btnTag.setId(j + (i * size));
                 row.addView(btnTag);
             }
@@ -120,6 +122,11 @@ public class GameBoard extends AppCompatActivity {
             timeStamp = System.currentTimeMillis();
             timer.setProgress(60);
             timer.setProgressTintList(ColorStateList.valueOf(Color.parseColor("#FFFFFF")));
+            if (game.getSelected() != null) {
+                game.setBoard(game.getSelected().x, game.getSelected().y, game.getPlayerTurn());
+                game.setSelected(null);
+                game.clearPossibles();
+            }
             game.nextPlayer();
             refresh();
         }
@@ -135,27 +142,50 @@ public class GameBoard extends AppCompatActivity {
         int y = btnChip.getId() / game.getSize();
         int x = btnChip.getId() % game.getSize();
         Log.d("Button Info:", "ID: " + btnChip.getId() + ", X: " + x + ", Y: " + y + ", time: " + ((System.currentTimeMillis() - timeStamp) / 1000) + " Seconds.");
-        game.setBoard(x, y, game.getPlayerTurn());
-        game.nextPlayer();
-        refresh();
+        //game.setBoard(x, y, game.getPlayerTurn());
+        try {
+            if (game.isValidSelection(x, y)) {
+                if(game.getBoard()[y][x] > 0) {
+                    Point lastTile = game.getSelected();
+                    if (lastTile != null && lastTile.x != x && lastTile.y != y) {
+                        game.setBoard(lastTile.x, lastTile.y, game.getBoard()[lastTile.y][lastTile.x] - 4);
+                    }
+                    if (game.getSelected() != null && game.getSelected().x == x && game.getSelected().y == y) {
+                        game.setSelected(null);
+                        game.clearPossibles();
+                        game.setBoard(x, y, game.getPlayerTurn());
+                    } else {
+                        game.setSelected(x, y);
+                        game.setBoard(x, y, game.getPlayerTurn() + 4);
+                        game.setPossibleMoves(x, y);
+                    }
+                    //game.nextPlayer();
+                } else if (game.getBoard()[y][x] < 0) {
+
+                }
+                refresh();
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 
     public void refresh() {
         int board[][] = game.getBoard();
         for (int y = 0; y < board.length; y++) {
             for (int x = 0; x < board[y].length; x++) {
-                if (board[y][x] != 0) {
-                    int resID = getResources().getIdentifier((y * board.length + x) + "", "id", getPackageName());
-                    ImageButton button = ((ImageButton) findViewById(resID));
-                    changeButton(button, board[y][x]);
-                }
+                int resID = getResources().getIdentifier((y * board.length + x) + "", "id", getPackageName());
+                ImageButton button = ((ImageButton) findViewById(resID));
+                changeButton(button, board[y][x]);
             }
         }
         updateTurnText();
     }
 
     public void changeButton(ImageButton button, int player) {
-        if (player == 1)
+        if (player == 0)
+            button.setBackgroundResource(android.R.drawable.btn_default);
+        else if (player == 1)
             button.setBackgroundResource(R.drawable.redblock);
         else if (player == 2)
             button.setBackgroundResource(R.drawable.blueblock);
@@ -163,6 +193,17 @@ public class GameBoard extends AppCompatActivity {
             button.setBackgroundResource(R.drawable.greenblock);
         else if (player == 4)
             button.setBackgroundResource(R.drawable.purpleblock);
+        else if (player == 5)
+            button.setBackgroundResource(R.drawable.redblocks);
+        else if (player == 6)
+            button.setBackgroundResource(R.drawable.blueblocks);
+        else if (player == 7)
+            button.setBackgroundResource(R.drawable.greenblocks);
+        else if (player == 8)
+            button.setBackgroundResource(R.drawable.purpleblocks);
+        else if (player < 0)
+            button.setBackgroundResource(R.drawable.purpleblocks);
+
     }
 
     private Drawable resize(Drawable image, int width, int height) {
