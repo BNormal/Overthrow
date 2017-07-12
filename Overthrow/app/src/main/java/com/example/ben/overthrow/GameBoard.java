@@ -41,9 +41,18 @@ public class GameBoard extends AppCompatActivity {
         int data[] = intent.getIntArrayExtra("data");
         // 0 = size, 1 = players, 2 = timer
         game = new Game(data[0], data[1], data[2]);
-        Log.w("Board", data[0] + ", " + data[1] + ", " + data[2]);
         setContentView(R.layout.activity_game_board);
         LinearLayout layout = (LinearLayout) findViewById(R.id.layoutBoard);
+        if (data[1] == 2) {
+            TextView txtP3 = (TextView) findViewById(R.id.txtP3);
+            TextView txtP4 = (TextView) findViewById(R.id.txtP4);
+            TextView txtP3Score = (TextView) findViewById(R.id.txtP3Score);
+            TextView txtP4Score = (TextView) findViewById(R.id.txtP4Score);
+            txtP3.setText("");
+            txtP4.setText("");
+            txtP3Score.setText("");
+            txtP4Score.setText("");
+        }
         Button btnMenu = (Button) findViewById(R.id.btnMenu);
         btnMenu.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -150,6 +159,10 @@ public class GameBoard extends AppCompatActivity {
             button.setBackgroundResource(R.drawable.redblock);
         else if (player == 2)
             button.setBackgroundResource(R.drawable.blueblock);
+        else if (player == 3)
+            button.setBackgroundResource(R.drawable.greenblock);
+        else if (player == 4)
+            button.setBackgroundResource(R.drawable.purpleblock);
     }
 
     private Drawable resize(Drawable image, int width, int height) {

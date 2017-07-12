@@ -59,8 +59,10 @@ public class Game {
 
     public String getCurrentPlayerColor() {
         switch (playerTurn) {
-            case 1: return "#0099cc";
-            case 2: return "#cc0000";
+            case 1: return "#ED1C24";//red
+            case 2: return "#00A2E8";//blue
+            case 3: return "#22B14C";//green
+            case 4: return "#A349A4";//purple
         }
         return "#ffffff";
     }
