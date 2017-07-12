@@ -29,6 +29,7 @@ public class Game {
         board[0][size - 1] = nextPlayer();
         board[size - 1][size - 1] = nextPlayer();
         board[size - 1][0] = nextPlayer();
+        board[3][3] = nextPlayer();
     }
 
     public void setSelected(int x, int y) {
@@ -98,17 +99,17 @@ public class Game {
             for (int y = -1 * radius; y < (1 + radius); y++) {
                 int checkX = selected.x + x;
                 int checkY = selected.y + y;
-                if ((checkX < 0 || checkX >= size || checkY < 0 || checkY >= size))
+                if ((checkX < 0 || checkX >= size || checkY < 0 || checkY >= size) || (x == 0 && y == 0))
                     continue;
-                Log.w("new", "X: " + checkX + ", Y: " + checkY);
-                if (board[checkX][checkY] == 0)
-                    moves.add(new Point(checkX, checkY));
+                if (board[checkY][checkX] == 0) {
+                    moves.add(new Point(checkY, checkX));
+                }
             }
         }
         Point checks[] = {new Point(-2, 2), new Point(0, 2), new Point(2, 2), new Point(2, 0), new Point(2, -2), new Point(0, -2), new Point(-2, -2), new Point(-2, 0)};
         for (int i = 0; i < checks.length; i++) {
-            int checkX = selected.x + checks[i].x;
-            int checkY = selected.y + checks[i].y;
+            int checkX = selected.y + checks[i].y;
+            int checkY = selected.x + checks[i].x;
             if (checkX < 0 || checkX >= size || checkY < 0 || checkY >= size)
                 continue;
             if (board[checkX][checkY] == 0)
@@ -127,8 +128,8 @@ public class Game {
     public void setPossibleMoves(int x, int y) {
         List<Point> possibles = getValidMoves(new Point(x, y));
         for (Point tile : possibles) {
-            if (tile.x != x && tile.y != y)
-                board[tile.y][tile.x] = playerTurn * -1;
+            //Log.w("new", "X: " + tile.x + ", Y: " + tile.y);
+            board[tile.x][tile.y] = playerTurn * -1;
         }
     }
 }

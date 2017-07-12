@@ -3,8 +3,11 @@ package com.example.ben.overthrow;
 import android.content.Intent;
 import android.content.res.ColorStateList;
 import android.graphics.Bitmap;
+import android.graphics.Canvas;
 import android.graphics.Color;
+import android.graphics.Paint;
 import android.graphics.Point;
+import android.graphics.Rect;
 import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
 import android.os.AsyncTask;
@@ -25,7 +28,11 @@ public class GameBoard extends AppCompatActivity {
 
     private Game game;
     private long timeStamp;
+    private long timeStamp2;
     boolean stopTimer;
+    private int moveableSize = 0;
+    private boolean grow = false;
+    Bitmap moveable;
 
     @Override
     protected void onStop() {
@@ -37,6 +44,7 @@ public class GameBoard extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         timeStamp = System.currentTimeMillis();
+        timeStamp2 = System.currentTimeMillis();
         stopTimer = false;
         Intent intent = getIntent();
         int data[] = intent.getIntArrayExtra("data");
@@ -103,9 +111,22 @@ public class GameBoard extends AppCompatActivity {
                     }
                     handler.post(new Runnable(){
                         public void run() {
-                            time = (System.currentTimeMillis() - timeStamp) / 1000;
-                            if (time >= 1)
-                                updateTimer((int) time);
+                            time = (System.currentTimeMillis() - timeStamp);
+                            if (time >= 1000)
+                                updateTimer((int) time / 1000);
+                            time = (System.currentTimeMillis() - timeStamp2);
+                            if (time >= 100) {
+                                timeStamp2 = System.currentTimeMillis();
+                                updateMoveables();
+                                if (grow)
+                                    moveableSize++;
+                                else
+                                    moveableSize--;
+                                if (moveableSize <= 0)
+                                    grow = true;
+                                else if (moveableSize > 5)
+                                    grow = false;
+                            }
                         }
                     });
                 }
@@ -149,6 +170,7 @@ public class GameBoard extends AppCompatActivity {
                     Point lastTile = game.getSelected();
                     if (lastTile != null && lastTile.x != x && lastTile.y != y) {
                         game.setBoard(lastTile.x, lastTile.y, game.getBoard()[lastTile.y][lastTile.x] - 4);
+                        game.clearPossibles();
                     }
                     if (game.getSelected() != null && game.getSelected().x == x && game.getSelected().y == y) {
                         game.setSelected(null);
@@ -182,6 +204,32 @@ public class GameBoard extends AppCompatActivity {
         updateTurnText();
     }
 
+    public BitmapDrawable getMoveable() {
+        Rect rect = new Rect(0, 0, 50, 50);
+        Rect actualRec = new Rect(moveableSize + 2, moveableSize + 1, (int) (45 - moveableSize * 1.5), (int) (45 - moveableSize * 1.5));
+        Paint paint= new Paint();
+        paint.setColor(Color.parseColor(game.getCurrentPlayerColor()));
+        moveable = Bitmap.createBitmap(rect.width(), rect.height(), Bitmap.Config.ARGB_8888);
+        Canvas canvas = new Canvas(moveable);
+
+        canvas.drawRect(actualRec, paint);
+        BitmapDrawable d = new BitmapDrawable(getResources(), moveable);
+        return d;
+    }
+
+    public void updateMoveables() {
+        int board[][] = game.getBoard();
+        for (int y = 0; y < board.length; y++) {
+            for (int x = 0; x < board[y].length; x++) {
+                if (board[y][x] >= 0)
+                    continue;
+                int resID = getResources().getIdentifier((y * board.length + x) + "", "id", getPackageName());
+                ImageButton button = ((ImageButton) findViewById(resID));
+                changeButton(button, board[y][x]);
+            }
+        }
+    }
+
     public void changeButton(ImageButton button, int player) {
         if (player == 0)
             button.setBackgroundResource(android.R.drawable.btn_default);
@@ -202,7 +250,7 @@ public class GameBoard extends AppCompatActivity {
         else if (player == 8)
             button.setBackgroundResource(R.drawable.purpleblocks);
         else if (player < 0)
-            button.setBackgroundResource(R.drawable.purpleblocks);
+            button.setBackgroundDrawable(getMoveable());
 
     }
 
