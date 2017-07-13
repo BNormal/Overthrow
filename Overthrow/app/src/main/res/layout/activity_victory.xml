@@ -71,8 +71,8 @@
 
     <Button
         android:id="@+id/btnHome"
-        android:layout_width="171dp"
-        android:layout_height="81dp"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
         android:layout_marginBottom="32dp"
         android:layout_marginLeft="8dp"
         android:layout_marginRight="8dp"
@@ -107,8 +107,8 @@
 
     <TextView
         android:id="@+id/txtWinner"
-        android:layout_width="331dp"
-        android:layout_height="150dp"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
         android:layout_marginBottom="8dp"
         android:layout_marginLeft="8dp"
         android:layout_marginRight="8dp"

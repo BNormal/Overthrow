@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name">Overthrow</string>
+    <string name="app_name">FillrUp</string>
     <string-array name="board_sizes">
         <item>7x7</item>
         <item>5x5</item>

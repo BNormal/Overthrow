@@ -88,6 +88,8 @@ public class Game {
             playerTurn++;
             if (playerTurn > players)
                 playerTurn = 1;
+            if (getEmptyTile() == null)
+                break;
         }
         return playerTurn;
     }

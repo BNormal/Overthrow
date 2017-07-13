@@ -13,6 +13,8 @@ import android.graphics.drawable.Drawable;
 import android.os.Handler;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.util.DisplayMetrics;
+import android.util.Log;
 import android.view.Gravity;
 import android.view.View;
 import android.widget.Button;
@@ -37,6 +39,14 @@ public class GameBoard extends AppCompatActivity {
         super.onStop();
         stopTimer = true;
     }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        stopTimer = false;
+        startTimerThread();
+    }
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -71,6 +81,10 @@ public class GameBoard extends AppCompatActivity {
         ProgressBar timer = (ProgressBar) findViewById(R.id.timer);
         timer.setProgressBackgroundTintList(ColorStateList.valueOf(Color.parseColor("#FFFFFF")));
         int size = game.getSize();
+        DisplayMetrics displayMetrics = new DisplayMetrics();
+        getWindowManager().getDefaultDisplay().getMetrics(displayMetrics);
+        double hScale = 100.0 / 2392.0 * displayMetrics.heightPixels / 100.0;
+        double wScale = 100.0 / 1440.0 * displayMetrics.widthPixels / 100.0;
         for (int i = 0; i < size; i++) {
             LinearLayout row = new LinearLayout(this);
             row.setHorizontalGravity(Gravity.CENTER);
@@ -87,7 +101,7 @@ public class GameBoard extends AppCompatActivity {
                     }
                 });
                 btnTag.setLayoutParams(new LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.MATCH_PARENT));
-                btnTag.setLayoutParams(new LinearLayout.LayoutParams(165 + 5 * size * (7 - size), 165 + 5 * size * (7 - size)));
+                btnTag.setLayoutParams(new LinearLayout.LayoutParams((int) ((165 + 5 * size * (7 - size)) * wScale), (int) ((165 + 5 * size * (7 - size)) * hScale)));
                 btnTag.setId(j + (i * size));
                 row.addView(btnTag);
             }
@@ -321,7 +335,7 @@ public class GameBoard extends AppCompatActivity {
 
     public void updateTurnText() {
         TextView txtTurn = (TextView) findViewById(R.id.txtTurn);
-        txtTurn.setText("Player " + game.getPlayerTurn() + "\nYour Turn!");
+        txtTurn.setText("Player " + game.getPlayerTurn() + " G0!");
         String color = game.getCurrentPlayerColor();
         txtTurn.setTextColor(Color.parseColor(color));
     }
