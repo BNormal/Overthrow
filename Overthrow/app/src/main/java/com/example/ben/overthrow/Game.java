@@ -17,19 +17,26 @@ public class Game {
     private int playerTurn;
     private int players;
     private int timer;
+    private int scores[];
+    private boolean gameFinished;
     private Point selectedTile;
 
     public Game(int size, int players, int timer) {
         this.size = size;
         this.players = players;
         this.timer = timer;
+        this.scores = new int[]{1, 1, 1, 1, 1};
+        gameFinished = false;
         board = new int[size][size];
         playerTurn = Utils.random(1, players);
         board[0][0] = nextPlayer();
         board[0][size - 1] = nextPlayer();
         board[size - 1][size - 1] = nextPlayer();
         board[size - 1][0] = nextPlayer();
-        board[3][3] = nextPlayer();
+    }
+
+    public boolean hasFinished() {
+        return gameFinished;
     }
 
     public void setSelected(int x, int y) {
@@ -43,6 +50,8 @@ public class Game {
     public Point getSelected() {
         return selectedTile;
     }
+
+    public int getPlayers() { return players; }
 
     public int getTimer() { return timer; }
 
@@ -72,6 +81,11 @@ public class Game {
 
     public int nextPlayer() {
         playerTurn++;
+        while (scores[playerTurn - 1] <= 0) {
+            playerTurn++;
+            if (playerTurn > players)
+                playerTurn = 1;
+        }
         if (playerTurn > players)
             playerTurn = 1;
         return playerTurn;
@@ -118,13 +132,6 @@ public class Game {
         return moves;
     }
 
-    public void clearPossibles() {
-        for (int x = 0; x < size; x++)
-            for (int y = 0; y < size; y++)
-                if (board[y][x] < 0)
-                    board[y][x] = 0;
-    }
-
     public void setPossibleMoves(int x, int y) {
         List<Point> possibles = getValidMoves(new Point(x, y));
         for (Point tile : possibles) {
@@ -132,4 +139,66 @@ public class Game {
             board[tile.x][tile.y] = playerTurn * -1;
         }
     }
+
+    public void clearPossibles() {
+        for (int x = 0; x < size; x++)
+            for (int y = 0; y < size; y++)
+                if (board[y][x] < 0)
+                    board[y][x] = 0;
+    }
+
+    public int getDistance(Point originTile, Point newTile) {
+        int radius = 1;
+        for (int x = -1 * radius; x < (1 + radius); x++) {
+            for (int y = -1 * radius; y < (1 + radius); y++) {
+                int checkX = originTile.x + x;
+                int checkY = originTile.y + y;
+                if ((checkX < 0 || checkX >= size || checkY < 0 || checkY >= size) || (x == 0 && y == 0))
+                    continue;
+                if (checkY == newTile.y && checkX == newTile.x) {
+                    return 1;
+                }
+            }
+        }
+        return 2;
+    }
+
+    public void splat(Point tile) {
+        int radius = 1;
+        for (int x = -1 * radius; x < (1 + radius); x++) {
+            for (int y = -1 * radius; y < (1 + radius); y++) {
+                int checkX = tile.x + x;
+                int checkY = tile.y + y;
+                if ((checkX < 0 || checkX >= size || checkY < 0 || checkY >= size) || (x == 0 && y == 0))
+                    continue;
+                if (board[checkY][checkX] > 0 && board[checkY][checkX] != playerTurn)
+                    board[checkY][checkX] = playerTurn;
+            }
+        }
+    }
+
+    public int[] getScores() {
+        scores = new int[players + 1];
+        for (int x = 0; x < size; x++)
+            for (int y = 0; y < size; y++)
+                if (board[y][x] > 0)
+                    scores[board[y][x] - 1]++;
+                else if (board[y][x] == 0)
+                    scores[players]++;
+        if (scores[players] == 0)
+            gameFinished = true;
+        else if (players == 2 && (scores[0] == 0 || scores[1] == 0))
+            gameFinished = true;
+        else if (players == 4) {
+            int count = 0;
+            for (int i = 0; i < 4; i++) {
+                if (scores[i] == 0)
+                    count++;
+            }
+            if (count == 3)
+                gameFinished = true;
+        }
+        return scores;
+    }
+
 }

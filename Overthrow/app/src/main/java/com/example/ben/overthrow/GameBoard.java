@@ -10,7 +10,6 @@ import android.graphics.Point;
 import android.graphics.Rect;
 import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
-import android.os.AsyncTask;
 import android.os.Handler;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
@@ -19,7 +18,6 @@ import android.view.Gravity;
 import android.view.View;
 import android.widget.Button;
 import android.widget.ImageButton;
-import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.ProgressBar;
 import android.widget.TextView;
@@ -32,7 +30,7 @@ public class GameBoard extends AppCompatActivity {
     boolean stopTimer;
     private int moveableSize = 0;
     private boolean grow = false;
-    Bitmap moveable;
+    private Bitmap moveable;
 
     @Override
     protected void onStop() {
@@ -94,6 +92,7 @@ public class GameBoard extends AppCompatActivity {
             }
             layout.addView(row);
         }
+        updateScore();
         refresh();
         startTimerThread();
     }
@@ -104,7 +103,7 @@ public class GameBoard extends AppCompatActivity {
             long time;
             private long startTime = System.currentTimeMillis();
             public void run() {
-                while (!stopTimer) {
+                while (!stopTimer && !game.hasFinished()) {
                     try {
                         Thread.sleep(10);
                     } catch (Exception e) {
@@ -115,7 +114,7 @@ public class GameBoard extends AppCompatActivity {
                             if (time >= 1000)
                                 updateTimer((int) time / 1000);
                             time = (System.currentTimeMillis() - timeStamp2);
-                            if (time >= 100) {
+                            if (time >= 50) {
                                 timeStamp2 = System.currentTimeMillis();
                                 updateMoveables();
                                 if (grow)
@@ -163,11 +162,10 @@ public class GameBoard extends AppCompatActivity {
         int y = btnChip.getId() / game.getSize();
         int x = btnChip.getId() % game.getSize();
         Log.d("Button Info:", "ID: " + btnChip.getId() + ", X: " + x + ", Y: " + y + ", time: " + ((System.currentTimeMillis() - timeStamp) / 1000) + " Seconds.");
-        //game.setBoard(x, y, game.getPlayerTurn());
         try {
+            Point lastTile = game.getSelected();
             if (game.isValidSelection(x, y)) {
                 if(game.getBoard()[y][x] > 0) {
-                    Point lastTile = game.getSelected();
                     if (lastTile != null && lastTile.x != x && lastTile.y != y) {
                         game.setBoard(lastTile.x, lastTile.y, game.getBoard()[lastTile.y][lastTile.x] - 4);
                         game.clearPossibles();
@@ -181,14 +179,41 @@ public class GameBoard extends AppCompatActivity {
                         game.setBoard(x, y, game.getPlayerTurn() + 4);
                         game.setPossibleMoves(x, y);
                     }
-                    //game.nextPlayer();
-                } else if (game.getBoard()[y][x] < 0) {
-
                 }
+                refresh();
+            } else if (game.getBoard()[y][x] < 0) {
+                if (game.getDistance(new Point(lastTile.x, lastTile.y), new Point(x, y)) == 1)
+                    game.setBoard(lastTile.x, lastTile.y, game.getBoard()[lastTile.y][lastTile.x] - 4);
+                else
+                    game.setBoard(lastTile.x, lastTile.y, 0);
+                ProgressBar timer = (ProgressBar) findViewById(R.id.timer);
+                timer.setProgress(60);
+                timer.setProgressTintList(ColorStateList.valueOf(Color.parseColor("#FFFFFF")));
+                timeStamp = System.currentTimeMillis();
+                game.setSelected(null);
+                game.splat(new Point(x,y));
+                game.setBoard(x, y, game.getPlayerTurn());
+                game.clearPossibles();
+                updateScore();
+                game.nextPlayer();
                 refresh();
             }
         } catch (Exception e) {
             e.printStackTrace();
+        }
+    }
+
+    public void updateScore() {
+        int scores[] = game.getScores();
+        TextView txtP1Score = (TextView) findViewById(R.id.txtP1Score);
+        TextView txtP2Score = (TextView) findViewById(R.id.txtP2Score);
+        txtP1Score.setText("Score: " + scores[0]);
+        txtP2Score.setText("Score: " + scores[1]);
+        if (game.getPlayers() == 4) {
+            TextView txtP3Score = (TextView) findViewById(R.id.txtP3Score);
+            TextView txtP4Score = (TextView) findViewById(R.id.txtP4Score);
+            txtP3Score.setText("Score: " + scores[2]);
+            txtP4Score.setText("Score: " + scores[3]);
         }
     }
 
