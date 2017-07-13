@@ -65,6 +65,7 @@ public class GameBoard extends AppCompatActivity {
             @Override
             public void onClick(View v) {
                 startActivity(new Intent(GameBoard.this, MainMenu.class));
+                finish();
             }
         });
         ProgressBar timer = (ProgressBar) findViewById(R.id.timer);
@@ -128,6 +129,10 @@ public class GameBoard extends AppCompatActivity {
                             }
                         }
                     });
+                }
+                if (game.hasFinished()) {
+                    startActivity(new Intent(GameBoard.this, Victory.class));
+                    finish();
                 }
             }
         };

@@ -44,6 +44,7 @@ public class OptionMenu extends AppCompatActivity {
             @Override
             public void onClick(View v) {
                 startActivity(new Intent(OptionMenu.this, MainMenu.class));
+                finish();
             }
         });
         btnStart.setOnClickListener(new View.OnClickListener() {
@@ -56,6 +57,7 @@ public class OptionMenu extends AppCompatActivity {
                 int data[] = {size, players, time};
                 intent.putExtra("data", data);
                 startActivity(intent);
+                finish();
             }
         });
     }
