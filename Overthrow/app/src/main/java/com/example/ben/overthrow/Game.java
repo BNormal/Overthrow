@@ -1,7 +1,6 @@
 package com.example.ben.overthrow;
 
 import android.graphics.Point;
-import android.util.Log;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -79,16 +78,29 @@ public class Game {
         playerTurn = turn;
     }
 
-    public int nextPlayer() {
+    public int nextPlayer(boolean checkForMoves) {
         playerTurn++;
-        while (scores[playerTurn - 1] <= 0) {
+        if (playerTurn > players)
+            playerTurn = 1;
+        while (scores[playerTurn - 1] <= 0 || !playerCanMove(playerTurn) && checkForMoves) {
+            if (!playerCanMove(playerTurn) && checkForMoves && players == 2)
+                gameFinished = true;
             playerTurn++;
             if (playerTurn > players)
                 playerTurn = 1;
         }
-        if (playerTurn > players)
-            playerTurn = 1;
         return playerTurn;
+    }
+
+    public int getPreviousPlayer() {
+        int previous = playerTurn - 1;
+        if (previous == 0)
+            previous = players;
+        return previous;
+    }
+
+    public int nextPlayer() {
+        return nextPlayer(false);
     }
 
     public String getCurrentPlayerColor() {
@@ -108,7 +120,6 @@ public class Game {
     public List<Point> getValidMoves(Point selected) {
         List<Point> moves = new ArrayList<Point>();
         int radius = 1;
-        Log.d("O", "X: " + selected.x + ", Y: " + selected.y);
         for (int x = -1 * radius; x < (1 + radius); x++) {
             for (int y = -1 * radius; y < (1 + radius); y++) {
                 int checkX = selected.x + x;
@@ -135,7 +146,6 @@ public class Game {
     public void setPossibleMoves(int x, int y) {
         List<Point> possibles = getValidMoves(new Point(x, y));
         for (Point tile : possibles) {
-            //Log.w("new", "X: " + tile.x + ", Y: " + tile.y);
             board[tile.x][tile.y] = playerTurn * -1;
         }
     }
@@ -145,6 +155,14 @@ public class Game {
             for (int y = 0; y < size; y++)
                 if (board[y][x] < 0)
                     board[y][x] = 0;
+    }
+
+    public Point getEmptyTile() {
+        for (int x = 0; x < size; x++)
+            for (int y = 0; y < size; y++)
+                if (board[y][x] == 0)
+                    return new Point(x, y);
+        return null;
     }
 
     public int getDistance(Point originTile, Point newTile) {
@@ -177,6 +195,18 @@ public class Game {
         }
     }
 
+    public int getWinner() {
+        int topPlayer = -1;
+        int topScore = -1;
+        for (int i = 0; i < players; i++) {
+            if (scores[i] > topScore) {
+                topScore = scores[i];
+                topPlayer = i + 1;
+            }
+        }
+        return topPlayer;
+    }
+
     public int[] getScores() {
         scores = new int[players + 1];
         for (int x = 0; x < size; x++)
@@ -199,6 +229,15 @@ public class Game {
                 gameFinished = true;
         }
         return scores;
+    }
+
+    public boolean playerCanMove(int player) {
+        for (int x = 0; x < size; x++)
+            for (int y = 0; y < size; y++)
+                if (board[y][x] == player)
+                    if (getValidMoves(new Point(x, y)).size() > 0)
+                        return true;
+        return false;
     }
 
 }

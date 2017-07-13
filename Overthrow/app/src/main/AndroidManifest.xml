@@ -18,7 +18,8 @@
         </activity>
         <activity android:name=".OptionMenu" />
         <activity android:name=".GameBoard" />
-        <activity android:name=".Victory"></activity>
+        <activity android:name=".Victory" />
+        <activity android:name=".Credits"></activity>
     </application>
 
 </manifest>

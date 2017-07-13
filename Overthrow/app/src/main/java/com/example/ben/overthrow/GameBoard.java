@@ -13,7 +13,6 @@ import android.graphics.drawable.Drawable;
 import android.os.Handler;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
-import android.util.Log;
 import android.view.Gravity;
 import android.view.View;
 import android.widget.Button;
@@ -31,6 +30,7 @@ public class GameBoard extends AppCompatActivity {
     private int moveableSize = 0;
     private boolean grow = false;
     private Bitmap moveable;
+    private int lastSound = 0;
 
     @Override
     protected void onStop() {
@@ -104,7 +104,7 @@ public class GameBoard extends AppCompatActivity {
             long time;
             private long startTime = System.currentTimeMillis();
             public void run() {
-                while (!stopTimer && !game.hasFinished()) {
+                while (!stopTimer) {
                     try {
                         Thread.sleep(10);
                     } catch (Exception e) {
@@ -112,26 +112,45 @@ public class GameBoard extends AppCompatActivity {
                     handler.post(new Runnable(){
                         public void run() {
                             time = (System.currentTimeMillis() - timeStamp);
-                            if (time >= 1000)
-                                updateTimer((int) time / 1000);
-                            time = (System.currentTimeMillis() - timeStamp2);
-                            if (time >= 50) {
-                                timeStamp2 = System.currentTimeMillis();
-                                updateMoveables();
-                                if (grow)
-                                    moveableSize++;
-                                else
-                                    moveableSize--;
-                                if (moveableSize <= 0)
-                                    grow = true;
-                                else if (moveableSize > 5)
-                                    grow = false;
+                            if (!game.hasFinished()) {
+                                if (time >= 1000)
+                                    updateTimer((int) time / 1000);
+                                time = (System.currentTimeMillis() - timeStamp2);
+                                if (time >= 50) {
+                                    timeStamp2 = System.currentTimeMillis();
+                                    updateMoveables();
+                                    if (grow)
+                                        moveableSize++;
+                                    else
+                                        moveableSize--;
+                                    if (moveableSize <= 0)
+                                        grow = true;
+                                    else if (moveableSize > 5)
+                                        grow = false;
+                                }
+                            } else {
+                                if (time >= 50) {
+                                    Point tile = game.getEmptyTile();
+                                    if (tile == null && time >= 1000) {
+                                        stopTimer = true;
+                                    } else if (tile != null) {
+                                        timeStamp = System.currentTimeMillis();
+                                        game.setBoard(tile.x, tile.y, game.getPlayerTurn());
+                                        updateScore();
+                                        refresh();
+                                    }
+                                }
                             }
                         }
                     });
                 }
                 if (game.hasFinished()) {
-                    startActivity(new Intent(GameBoard.this, Victory.class));
+                    Intent intent = new Intent(new Intent(GameBoard.this, Victory.class));
+                    int scores[] = game.getScores();
+                    int data[] = {scores[0], scores[1], game.getPlayers() == 2 ? -1 : scores[2], game.getPlayers() == 2 ? -1 : scores[3], game.getPlayers(), game.getWinner()};
+                    intent.putExtra("data", data);
+                    startActivity(intent);
+
                     finish();
                 }
             }
@@ -163,15 +182,17 @@ public class GameBoard extends AppCompatActivity {
     }
 
     public void handleButtonClick(View view) {
+        if (game.hasFinished())
+            return;
         ImageButton btnChip = (ImageButton)view;
         int y = btnChip.getId() / game.getSize();
         int x = btnChip.getId() % game.getSize();
-        Log.d("Button Info:", "ID: " + btnChip.getId() + ", X: " + x + ", Y: " + y + ", time: " + ((System.currentTimeMillis() - timeStamp) / 1000) + " Seconds.");
+        //Log.d("Button Info:", "ID: " + btnChip.getId() + ", X: " + x + ", Y: " + y + ", time: " + ((System.currentTimeMillis() - timeStamp) / 1000) + " Seconds.");
         try {
             Point lastTile = game.getSelected();
             if (game.isValidSelection(x, y)) {
                 if(game.getBoard()[y][x] > 0) {
-                    if (lastTile != null && lastTile.x != x && lastTile.y != y) {
+                    if (lastTile != null && (lastTile.x != x || lastTile.y != y)) {
                         game.setBoard(lastTile.x, lastTile.y, game.getBoard()[lastTile.y][lastTile.x] - 4);
                         game.clearPossibles();
                     }
@@ -187,7 +208,8 @@ public class GameBoard extends AppCompatActivity {
                 }
                 refresh();
             } else if (game.getBoard()[y][x] < 0) {
-                if (game.getDistance(new Point(lastTile.x, lastTile.y), new Point(x, y)) == 1)
+                int distance = game.getDistance(new Point(lastTile.x, lastTile.y), new Point(x, y));
+                if (distance == 1)
                     game.setBoard(lastTile.x, lastTile.y, game.getBoard()[lastTile.y][lastTile.x] - 4);
                 else
                     game.setBoard(lastTile.x, lastTile.y, 0);
@@ -197,10 +219,17 @@ public class GameBoard extends AppCompatActivity {
                 timeStamp = System.currentTimeMillis();
                 game.setSelected(null);
                 game.splat(new Point(x,y));
+                if (Utils.soundEffectsVolume > 0) {
+                    int soundIndex = Utils.random(0, Utils.soundEffects.size() - 1);
+                    while (lastSound == soundIndex)
+                        soundIndex = Utils.random(0, Utils.soundEffects.size() - 1);
+                    lastSound = soundIndex;
+                    Utils.soundEffects.get(soundIndex).start();
+                }
                 game.setBoard(x, y, game.getPlayerTurn());
                 game.clearPossibles();
                 updateScore();
-                game.nextPlayer();
+                game.nextPlayer(true);
                 refresh();
             }
         } catch (Exception e) {
