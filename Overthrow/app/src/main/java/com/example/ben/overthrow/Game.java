@@ -105,8 +105,8 @@ public class Game {
         return nextPlayer(false);
     }
 
-    public String getCurrentPlayerColor() {
-        switch (playerTurn) {
+    public String getPlayerColor(int player) {
+        switch (player) {
             case 1: return "#ED1C24";//red
             case 2: return "#00A2E8";//blue
             case 3: return "#22B14C";//green
@@ -115,8 +115,62 @@ public class Game {
         return "#ffffff";
     }
 
+    public String getCurrentPlayerColor() {
+        return getPlayerColor(playerTurn);
+    }
+
     public boolean isValidSelection(int x, int y) {
         return board[y][x] == playerTurn || (board[y][x] > 4 && board[y][x] - 4 == playerTurn);
+    }
+
+    public Point getRandomTile(int player) {
+        List<Point> allTiles = new ArrayList<Point>();
+        for (int x = 0; x < size; x++) {
+            for (int y = 0; y < size; y++) {
+                if (board[y][x] == player) {
+                    allTiles.add(new Point(x, y));
+                }
+            }
+        }
+        if (allTiles.size() == 0)
+            return null;
+        int randomIndex = Utils.random(0, allTiles.size() - 1);
+        List<Point> possibleMoves = getValidMoves(allTiles.get(randomIndex));
+        List<Integer> bad = new ArrayList<Integer>();
+        while (possibleMoves.size() == 0) {
+            bad.add(randomIndex);
+            randomIndex = Utils.random(0, allTiles.size() - 1, bad);
+            possibleMoves = getValidMoves(allTiles.get(randomIndex));
+        }
+        return allTiles.get(randomIndex);
+    }
+
+    public Point getOneSpaceAwayTile(List<Point> possibleMoves, Point origin) {
+        if (possibleMoves.size() == 0)
+            return null;
+        int distance = getDistance(new Point(origin.x, origin.y), new Point(possibleMoves.get(0).x, possibleMoves.get(0).y));
+        if (distance == 1) {
+            int count = 0;
+            for (int i = 0; i < possibleMoves.size(); i++) {
+                if (getDistance(new Point(origin.x, origin.y), new Point(possibleMoves.get(i).x, possibleMoves.get(i).y)) == 2)
+                    break;
+                count++;
+            }
+            return possibleMoves.get(Utils.random(0, count));
+        }
+        return null;
+    }
+
+    public Point getRandomPossible(Point selected) {
+        List<Point> possibleMoves = getValidMoves(selected);
+        Point tile;
+        if (Utils.random(0, 6) == 1)
+            tile = possibleMoves.get(Utils.random(0, possibleMoves.size() - 1));
+        else
+            tile = getOneSpaceAwayTile(possibleMoves, selected);
+        if (tile == null)
+            tile = possibleMoves.get(Utils.random(0, possibleMoves.size() - 1));
+        return tile;
     }
 
     public List<Point> getValidMoves(Point selected) {
@@ -139,7 +193,7 @@ public class Game {
             int checkY = selected.x + checks[i].x;
             if (checkX < 0 || checkX >= size || checkY < 0 || checkY >= size)
                 continue;
-            if (board[checkX][checkY] == 0)
+            if (board[checkY][checkX] == 0)
                 moves.add(new Point(checkX, checkY));
         }
         return moves;

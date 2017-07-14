@@ -25,6 +25,15 @@ public class Utils {
         return Math.min(min, max) + (n == 0 ? 0 : random(n));
     }
 
+    public static final int random(int min, int max, List<Integer> badValues) {
+        max = max + 1;
+        final int n = Math.abs(max - min);
+        int value = Math.min(min, max) + (n == 0 ? 0 : random(n));
+        if (badValues.contains(value))
+            return random(min, max, badValues);
+        return value;
+    }
+
     public static final int random(int maxValue) {
         return (int) new Random().nextInt(maxValue);
     }

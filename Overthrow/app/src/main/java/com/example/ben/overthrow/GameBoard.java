@@ -28,11 +28,14 @@ public class GameBoard extends AppCompatActivity {
     private Game game;
     private long timeStamp;
     private long timeStamp2;
+    private long timeStamp3;
     boolean stopTimer;
     private int moveableSize = 0;
     private boolean grow = false;
     private Bitmap moveable;
     private int lastSound = 0;
+    private int ai[];
+    private long makeMove;
 
     @Override
     protected void onStop() {
@@ -53,11 +56,16 @@ public class GameBoard extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         timeStamp = System.currentTimeMillis();
         timeStamp2 = System.currentTimeMillis();
+        timeStamp3 = System.currentTimeMillis();
+        makeMove = 1000;
         stopTimer = false;
         Intent intent = getIntent();
         int data[] = intent.getIntArrayExtra("data");
         // 0 = size, 1 = players, 2 = timer
         game = new Game(data[0], data[1], data[2]);
+        ai = new int[data[1]];
+        for (int i = 0; i < ai.length; i++)
+            ai[i] = data[i + 3];
         setContentView(R.layout.activity_game_board);
         LinearLayout layout = (LinearLayout) findViewById(R.id.layoutBoard);
         if (data[1] == 2) {
@@ -142,6 +150,34 @@ public class GameBoard extends AppCompatActivity {
                                     else if (moveableSize > 5)
                                         grow = false;
                                 }
+                                 if (makeMove < (System.currentTimeMillis() - timeStamp3)) {
+                                     makeMove = 1000 + Utils.random(0, 1500);
+                                     timeStamp3 = System.currentTimeMillis();
+                                     if (ai[game.getPlayerTurn() - 1] == 1) {
+                                         Point tile = game.getRandomTile(game.getPlayerTurn());
+                                         Point moveTile = game.getRandomPossible(new Point(tile.y, tile.x));
+                                         int distance = game.getDistance(new Point(tile.x, tile.y), new Point(moveTile.x, moveTile.y));
+                                         game.clearPossibles();
+                                         if (distance >= 2)
+                                             game.setBoard(tile.x, tile.y, game.getPlayerTurn() * -1);
+                                         ProgressBar timer = (ProgressBar) findViewById(R.id.timer);
+                                         timer.setProgress(60);
+                                         timer.setProgressTintList(ColorStateList.valueOf(Color.parseColor("#FFFFFF")));
+                                         timeStamp = System.currentTimeMillis();
+                                         game.splat(new Point(moveTile.x, moveTile.y));
+                                         if (Utils.soundEffectsVolume > 0) {
+                                             int soundIndex = Utils.random(0, Utils.soundEffects.size() - 1);
+                                             while (lastSound == soundIndex)
+                                                 soundIndex = Utils.random(0, Utils.soundEffects.size() - 1);
+                                             lastSound = soundIndex;
+                                             Utils.soundEffects.get(soundIndex).start();
+                                         }
+                                         game.setBoard(moveTile.x, moveTile.y, game.getPlayerTurn());
+                                         updateScore();
+                                         game.nextPlayer(true);
+                                         refresh();
+                                     }
+                                 }
                             } else {
                                 if (time >= 50) {
                                     Point tile = game.getEmptyTile();
@@ -196,7 +232,7 @@ public class GameBoard extends AppCompatActivity {
     }
 
     public void handleButtonClick(View view) {
-        if (game.hasFinished())
+        if (game.hasFinished() || ai[game.getPlayerTurn() - 1] == 1)
             return;
         ImageButton btnChip = (ImageButton)view;
         int y = btnChip.getId() / game.getSize();
@@ -251,6 +287,7 @@ public class GameBoard extends AppCompatActivity {
         }
     }
 
+
     public void updateScore() {
         int scores[] = game.getScores();
         TextView txtP1Score = (TextView) findViewById(R.id.txtP1Score);
@@ -277,11 +314,11 @@ public class GameBoard extends AppCompatActivity {
         updateTurnText();
     }
 
-    public BitmapDrawable getMoveable() {
+    public BitmapDrawable getMoveable(int player) {
         Rect rect = new Rect(0, 0, 50, 50);
         Rect actualRec = new Rect(moveableSize + 2, moveableSize + 1, (int) (45 - moveableSize * 1.5), (int) (45 - moveableSize * 1.5));
         Paint paint= new Paint();
-        paint.setColor(Color.parseColor(game.getCurrentPlayerColor()));
+        paint.setColor(Color.parseColor(game.getPlayerColor(player)));
         moveable = Bitmap.createBitmap(rect.width(), rect.height(), Bitmap.Config.ARGB_8888);
         Canvas canvas = new Canvas(moveable);
 
@@ -323,7 +360,7 @@ public class GameBoard extends AppCompatActivity {
         else if (player == 8)
             button.setBackgroundResource(R.drawable.purpleblocks);
         else if (player < 0)
-            button.setBackgroundDrawable(getMoveable());
+            button.setBackgroundDrawable(getMoveable(player * -1));
 
     }
 
