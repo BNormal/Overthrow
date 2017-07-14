@@ -156,26 +156,31 @@ public class GameBoard extends AppCompatActivity {
                                      if (ai[game.getPlayerTurn() - 1] == 1) {
                                          Point tile = game.getRandomTile(game.getPlayerTurn());
                                          Point moveTile = game.getRandomPossible(new Point(tile.y, tile.x));
-                                         int distance = game.getDistance(new Point(tile.x, tile.y), new Point(moveTile.x, moveTile.y));
-                                         game.clearPossibles();
-                                         if (distance >= 2)
-                                             game.setBoard(tile.x, tile.y, game.getPlayerTurn() * -1);
-                                         ProgressBar timer = (ProgressBar) findViewById(R.id.timer);
-                                         timer.setProgress(60);
-                                         timer.setProgressTintList(ColorStateList.valueOf(Color.parseColor("#FFFFFF")));
-                                         timeStamp = System.currentTimeMillis();
-                                         game.splat(new Point(moveTile.x, moveTile.y));
-                                         if (Utils.soundEffectsVolume > 0) {
-                                             int soundIndex = Utils.random(0, Utils.soundEffects.size() - 1);
-                                             while (lastSound == soundIndex)
-                                                 soundIndex = Utils.random(0, Utils.soundEffects.size() - 1);
-                                             lastSound = soundIndex;
-                                             Utils.soundEffects.get(soundIndex).start();
+                                         if (moveTile != null) {
+                                             int distance = game.getDistance(new Point(tile.x, tile.y), new Point(moveTile.x, moveTile.y));
+                                             game.clearPossibles();
+                                             if (distance >= 2)
+                                                 game.setBoard(tile.x, tile.y, game.getPlayerTurn() * -1);
+                                             ProgressBar timer = (ProgressBar) findViewById(R.id.timer);
+                                             timer.setProgress(60);
+                                             timer.setProgressTintList(ColorStateList.valueOf(Color.parseColor("#FFFFFF")));
+                                             timeStamp = System.currentTimeMillis();
+                                             game.splat(new Point(moveTile.x, moveTile.y));
+                                             if (Utils.soundEffectsVolume > 0) {
+                                                 int soundIndex = Utils.random(0, Utils.soundEffects.size() - 1);
+                                                 while (lastSound == soundIndex)
+                                                     soundIndex = Utils.random(0, Utils.soundEffects.size() - 1);
+                                                 lastSound = soundIndex;
+                                                 Utils.soundEffects.get(soundIndex).start();
+                                             }
+                                             game.setBoard(moveTile.x, moveTile.y, game.getPlayerTurn());
+                                             updateScore();
+                                             game.nextPlayer(true);
+                                             refresh();
+                                         } else {
+                                             game.nextPlayer(true);
+                                             refresh();
                                          }
-                                         game.setBoard(moveTile.x, moveTile.y, game.getPlayerTurn());
-                                         updateScore();
-                                         game.nextPlayer(true);
-                                         refresh();
                                      }
                                  }
                             } else {

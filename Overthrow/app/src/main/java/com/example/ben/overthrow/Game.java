@@ -154,8 +154,11 @@ public class Game {
             for (int i = 0; i < possibleMoves.size(); i++) {
                 if (getDistance(new Point(origin.x, origin.y), new Point(possibleMoves.get(i).x, possibleMoves.get(i).y)) == 2)
                     break;
-                count++;
+                else
+                    count++;
             }
+            if (count >= possibleMoves.size())
+                count = possibleMoves.size() - 1;
             return possibleMoves.get(Utils.random(0, count));
         }
         return null;
@@ -164,6 +167,8 @@ public class Game {
     public Point getRandomPossible(Point selected) {
         List<Point> possibleMoves = getValidMoves(selected);
         Point tile;
+        if (possibleMoves.size() == 0)
+            return null;
         if (Utils.random(0, 6) == 1)
             tile = possibleMoves.get(Utils.random(0, possibleMoves.size() - 1));
         else
